@@ -10,7 +10,6 @@ import kotlin.properties.Delegates
 import androidx.core.animation.doOnEnd
 import androidx.core.content.withStyledAttributes
 
-
 class LoadingButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
@@ -27,9 +26,11 @@ class LoadingButton @JvmOverloads constructor(
         typeface = Typeface.create("", Typeface.BOLD)
     }
 
+    private val circlePaint = Paint(Paint.DITHER_FLAG).apply {
+        style = Paint.Style.FILL
+    }
 
-
-    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) {_ , _, new ->
+    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { _, _, new ->
         when (new) {
             ButtonState.Loading -> {
                 this.isEnabled = false
@@ -55,6 +56,7 @@ class LoadingButton @JvmOverloads constructor(
         context.withStyledAttributes(attrs,R.styleable.LoadingButton){
             backColor = getColor(R.styleable.LoadingButton_backColor,0)
             textPaint.color = getColor(R.styleable.LoadingButton_textColor,0)
+            circlePaint.color = getColor(R.styleable.LoadingButton_circleColor,0)
             fillPaint.color = getColor(R.styleable.LoadingButton_fillColor,0)
         }
 
@@ -78,6 +80,9 @@ class LoadingButton @JvmOverloads constructor(
 
     }
 
+    fun onComplete() {
+        buttonState = ButtonState.Completed
+    }
 
     override fun performClick(): Boolean {
         buttonState = ButtonState.Loading
@@ -96,7 +101,17 @@ class LoadingButton @JvmOverloads constructor(
                 "We are downloading"
             ) + 16f // set a space of 16 between the text and the circle
 
-} else {
+            canvas.drawArc(
+                textEnd,
+                heightSize * 0.3f,
+                textEnd + heightSize * 0.4f,
+                heightSize * 0.7f,
+                0f,
+                360 * progress,
+                true,
+                circlePaint
+            )
+        } else {
             drawCenteredText(canvas, context.getString(R.string.download))
         }
     }
